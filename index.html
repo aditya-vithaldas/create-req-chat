@@ -57,12 +57,18 @@
       height: calc(100vh - 32px);
       margin: 16px auto;
       display: grid;
-      grid-template-columns: minmax(380px, 0.9fr) minmax(540px, 1.1fr);
+      grid-template-rows: auto minmax(0, 1fr);
       border: 1px solid var(--line);
       border-radius: 12px;
       background: var(--paper);
       box-shadow: var(--shadow);
       overflow: hidden;
+    }
+
+    .workspace {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(380px, 0.86fr) minmax(540px, 1.14fr);
     }
 
     .conversation,
@@ -73,20 +79,27 @@
 
     .conversation {
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr) auto minmax(90px, 0.22fr);
+      grid-template-rows: minmax(0, 1fr) auto minmax(0, auto);
       border-right: 1px solid var(--line);
       background: #fbfdff;
     }
 
-    .topbar,
+    .app-header,
     .doc-head {
-      padding: 12px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 14px;
       border-bottom: 1px solid var(--line);
       background: rgba(255, 255, 255, 0.86);
+    }
+
+    .app-header {
+      padding: 8px 16px;
+    }
+
+    .doc-head {
+      padding: 11px 16px;
     }
 
     h1,
@@ -97,7 +110,7 @@
     }
 
     h1 {
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1.16;
       letter-spacing: 0;
       color: #2f4052;
@@ -118,11 +131,24 @@
     }
 
     .subtitle {
-      margin-top: 5px;
+      margin-top: 0;
       max-width: 560px;
     }
 
-    .session-actions,
+    .header-copy {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .header-copy .subtitle {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app-actions,
     .doc-actions {
       display: flex;
       flex-wrap: wrap;
@@ -149,9 +175,9 @@
     }
 
     .progress-wrap {
-      padding: 10px 20px;
+      padding: 9px 22px 12px;
       display: grid;
-      gap: 10px;
+      gap: 8px;
       border-bottom: 1px solid var(--line);
       background: #f8fbfd;
     }
@@ -180,7 +206,7 @@
     }
 
     .section-rail {
-      display: flex;
+      display: none;
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 2px;
@@ -206,12 +232,17 @@
 
     .messages {
       min-height: 0;
+      max-height: 150px;
       overflow: auto;
       padding: 12px 20px 16px;
       display: flex;
       flex-direction: column;
       gap: 8px;
       background: #fbfdff;
+    }
+
+    .messages:empty {
+      display: none;
     }
 
     .bubble {
@@ -250,10 +281,9 @@
 
     .live-panel {
       min-height: 0;
-      padding: 18px 28px;
+      padding: 28px;
       display: grid;
       place-items: center;
-      border-bottom: 1px solid var(--line);
       background:
         linear-gradient(135deg, rgba(47, 111, 221, 0.09), rgba(19, 160, 135, 0.08)),
         #ffffff;
@@ -291,12 +321,11 @@
       min-width: 0;
       display: grid;
       justify-items: center;
-      gap: 12px;
+      gap: 14px;
       width: min(640px, 100%);
       text-align: center;
     }
 
-    .hero-kicker,
     .question-label {
       color: var(--accent);
       font-size: 12px;
@@ -305,19 +334,11 @@
       text-transform: uppercase;
     }
 
-    .voice-headline {
-      max-width: 600px;
-      font-size: clamp(26px, 3.5vw, 38px);
-      line-height: 1.02;
-      letter-spacing: 0;
-      color: #2f4052;
-    }
-
     .question-card {
-      width: min(600px, 100%);
+      width: min(540px, 100%);
       display: grid;
       gap: 10px;
-      padding: 14px;
+      padding: 14px 16px;
       border: 1px solid rgba(184, 201, 217, 0.76);
       border-radius: var(--radius);
       background: rgba(255, 255, 255, 0.74);
@@ -339,11 +360,10 @@
 
     .live-caption {
       min-height: 34px;
-      width: min(600px, 100%);
-      padding: 8px 12px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(248, 251, 253, 0.82);
+      width: min(520px, 100%);
+      padding: 0;
+      border: 0;
+      background: transparent;
       color: #506375;
     }
 
@@ -493,12 +513,15 @@
         height: auto;
         min-height: calc(100vh - 20px);
         margin: 10px auto;
+      }
+
+      .workspace {
         grid-template-columns: 1fr;
       }
 
       .conversation {
-        min-height: 620px;
-        grid-template-rows: auto minmax(520px, auto) auto minmax(180px, auto);
+        min-height: 520px;
+        grid-template-rows: minmax(380px, auto) auto minmax(0, auto);
         border-right: 0;
         border-bottom: 1px solid var(--line);
       }
@@ -509,13 +532,13 @@
     }
 
     @media (max-width: 680px) {
-      .topbar,
+      .app-header,
       .doc-head {
         flex-direction: column;
+        align-items: flex-start;
       }
 
-      .session-actions,
-      .doc-actions {
+      .app-actions {
         justify-content: flex-start;
       }
 
@@ -527,10 +550,6 @@
         width: 108px;
         min-height: 108px;
       }
-
-      .voice-headline {
-        font-size: 30px;
-      }
     }
 
     @media (max-height: 760px) and (min-width: 1041px) {
@@ -541,11 +560,6 @@
       .voice-state {
         gap: 7px;
       }
-
-      .voice-headline {
-        font-size: 30px;
-      }
-
       .talk-button {
         width: 112px;
         min-height: 112px;
@@ -577,30 +591,31 @@
 </head>
 <body>
   <main class="app">
-    <section class="conversation" aria-label="Live voice requirements conversation">
-      <header class="topbar">
-        <div>
-          <h1>Create Req Chat</h1>
-          <p class="subtitle">Talk your way into a good requirement spec through just a conversation.</p>
-        </div>
-        <div class="session-actions">
-          <button class="ghost-button" id="restartButton" type="button">Restart</button>
-          <button class="secondary-button" id="copyTranscriptButton" type="button">Copy transcript</button>
-        </div>
-      </header>
+    <header class="app-header">
+      <div class="header-copy">
+        <h1>Create Req Chat</h1>
+        <p class="subtitle">Talk your way into a good requirement spec through just a conversation.</p>
+      </div>
+      <div class="app-actions">
+        <button class="ghost-button" id="restartButton" type="button">Restart</button>
+        <button class="ghost-button" id="copyTranscriptButton" type="button">Copy transcript</button>
+        <button class="ghost-button" id="copyMarkdownButton" type="button">Copy MD</button>
+        <button class="secondary-button" id="downloadButton" type="button">Download</button>
+      </div>
+    </header>
 
+    <div class="workspace">
+    <section class="conversation" aria-label="Live voice requirements conversation">
       <div class="live-panel">
         <div class="voice-state">
-          <p class="hero-kicker">Voice-first requirements</p>
-          <h2 class="voice-headline">Talk your way into a good requirement spec.</h2>
           <div class="question-card">
             <div class="question-label" id="questionLabel">Question 1 of 20 · Product shape</div>
             <div class="voice-title" id="voiceTitle">Ready when you are.</div>
             <div class="answer-guide" id="answerGuide">A strong answer gives enough detail that someone else could make a product decision from it.</div>
           </div>
           <button class="talk-button idle" id="talkButton" type="button">Start</button>
-          <div class="live-caption" id="liveCaption">Press Start and answer out loud. Each completed spoken turn updates the formatted requirements document on the right.</div>
-          <div class="voice-hint" id="voiceHint"><strong>Gemini Live target:</strong> the app requests a short-lived token from `/api/gemini-live-token`; browser speech is the local fallback until full audio streaming is connected.</div>
+          <div class="live-caption" id="liveCaption">Speak. The spec updates on the right.</div>
+          <div class="voice-hint hidden" id="voiceHint"><strong>Gemini Live target:</strong> token endpoint ready.</div>
         </div>
       </div>
 
@@ -624,10 +639,6 @@
           <h2>Requirements.md</h2>
           <p class="doc-status" id="docStatus">Formatted document updates from spoken answers.</p>
         </div>
-        <div class="doc-actions">
-          <button class="ghost-button" id="copyMarkdownButton" type="button">Copy MD</button>
-          <button class="secondary-button" id="downloadButton" type="button">Download</button>
-        </div>
       </header>
 
       <nav class="doc-tabs" aria-label="Document view">
@@ -640,6 +651,7 @@
         <textarea class="markdown-editor hidden" id="markdownEditor" readonly aria-label="Markdown source"></textarea>
       </div>
     </section>
+    </div>
   </main>
 
   <script>
@@ -807,6 +819,7 @@
         if (stored && typeof stored === "object") {
           answers = stored.answers || {};
           transcript = stored.transcript || [];
+          transcript = transcript.filter((turn) => turn.text !== "Press Start. I will ask requirements questions out loud, listen to your answers, and keep the formatted document updated on the right.");
           currentIndex = Number.isInteger(stored.currentIndex) ? stored.currentIndex : 0;
           currentIndex = Math.max(0, Math.min(currentIndex, questions.length));
         }
@@ -993,9 +1006,7 @@ ${answerFor("validationPlan") || pendingText()}
     function renderTranscript() {
       messages.replaceChildren();
       if (!transcript.length) {
-        addBubble("system", "Press Start. I will ask requirements questions out loud, listen to your answers, and keep the formatted document updated on the right.");
-        transcript = transcript.slice(0, 1);
-        saveState();
+        return;
       } else {
         const restored = [...transcript];
         transcript = [];
@@ -1018,7 +1029,7 @@ ${answerFor("validationPlan") || pendingText()}
 
       questionLabel.textContent = `Question ${currentIndex + 1} of ${questions.length} · ${question.section}`;
       voiceTitle.textContent = question.prompt;
-      answerGuide.textContent = `Strong answers include: ${question.guide}`;
+      answerGuide.textContent = `Good answer: ${question.guide}`;
     }
 
     function askCurrentQuestion() {
@@ -1031,7 +1042,7 @@ ${answerFor("validationPlan") || pendingText()}
 
       addBubble("assistant", question.prompt);
       speak(question.prompt);
-      liveCaption.textContent = "Listening for your answer. Aim for details, examples, tradeoffs, and constraints.";
+      liveCaption.textContent = "Listening.";
     }
 
     function speak(text) {
@@ -1112,7 +1123,7 @@ ${answerFor("validationPlan") || pendingText()}
         if (!response.ok) return;
         const payload = await response.json();
         if (payload.access_token) {
-          voiceHint.innerHTML = `<strong>Gemini Live token ready:</strong> ${escapeHtml(payload.model || geminiLiveConfig.model)}. Browser speech fallback is active until full audio streaming is connected.`;
+          voiceHint.innerHTML = `<strong>Gemini Live token ready:</strong> ${escapeHtml(payload.model || geminiLiveConfig.model)}.`;
         }
       } catch {
         // Static mode or no backend: browser speech fallback remains active.
@@ -1183,7 +1194,7 @@ ${answerFor("validationPlan") || pendingText()}
         talkButton.textContent = "Start";
         talkButton.classList.remove("listening");
         talkButton.classList.add("idle");
-        liveCaption.textContent = "Press Start to continue the live voice conversation.";
+        liveCaption.textContent = "Paused.";
       }
     }
 
@@ -1230,7 +1241,7 @@ ${answerFor("validationPlan") || pendingText()}
       talkButton.textContent = "Start";
       talkButton.classList.remove("listening");
       talkButton.classList.add("idle");
-      liveCaption.textContent = "Press Start and answer out loud. Each completed spoken turn updates the formatted requirements document on the right.";
+      liveCaption.textContent = "Speak. The spec updates on the right.";
       renderTranscript();
       updateAll();
     }
