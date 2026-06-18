@@ -1,15 +1,17 @@
 # Create Req Chat
 
-Create Req Chat is a requirements-definition companion. It starts with a conversation on the left and an editable markdown requirements document on the right. As the user answers deeper product questions, the markdown draft updates in real time so gaps are visible immediately.
+Create Req Chat is a voice-first requirements-definition companion. It starts with a live spoken conversation on the left and a formatted requirements document on the right. As the user speaks, each completed spoken turn becomes part of the conversation and the document updates in real time so gaps are visible immediately.
 
 The product goal is to force clear thinking before implementation starts. Instead of asking for a short prompt and producing shallow requirements, the app walks the user through target segment, competition, standard capabilities, differential capabilities, user love, user hate, scope, acceptance criteria, and open risks.
 
 ## Current Experience
 
-- Left pane: guided requirements interview with a Talk button, typed answers, skip support, answer copy, restart, and progress by section.
-- Right pane: live `Requirements.md` document with editable markdown, preview mode, copy, download, and manual-edit protection.
+- Left pane: live voice conversation with a single Start/Live control, assistant prompts, spoken user turns, transcript copy, restart, and progress by section.
+- Right pane: formatted `Requirements.md` document by default, with markdown source available as a secondary tab for copy/download.
 - Draft state: stored in browser `localStorage` so a user can refresh without losing the current conversation.
-- Voice path: browser speech capture works as a local fallback. Gemini Live is prepared through a backend token endpoint.
+- Voice path: browser speech capture and browser speech synthesis work as the local fallback. Gemini Live is prepared through a backend token endpoint for full real-time voice streaming.
+
+There is intentionally no typed-answer form in the main workflow. The primary experience is conversation: the assistant asks a question, the user speaks, the spoken answer is captured as a live chat turn, and the document on the right updates.
 
 ## Requirements Template
 
@@ -46,7 +48,7 @@ The interview asks 30 questions across these areas:
 - Scope
 - Validation
 
-Each answer is stored by key and then synthesized into the markdown document. This makes the document useful while the conversation is still unfinished.
+Each spoken answer is stored by key and then synthesized into the formatted document. This makes the document useful while the conversation is still unfinished.
 
 ## Gemini Live Voice Plan
 
@@ -112,7 +114,7 @@ Tracked files:
 
 - `.env.example` documents required variables.
 - `server.js` reads env vars and returns short-lived Gemini Live tokens.
-- `index.html` only requests short-lived tokens from the backend.
+- `index.html` only requests short-lived tokens from the backend and never stores a long-lived key.
 
 Ignored files:
 
