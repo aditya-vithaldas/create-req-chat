@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Self-Building Chat Prototype</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #26313a;
+      --muted: #74818b;
+      --line: #eadfe8;
+      --paper: #fff8fb;
+      --panel: rgba(255, 255, 255, 0.82);
+      --lilac: #c9b6ff;
+      --mint: #bcebdc;
+      --peach: #ffd0bd;
+      --butter: #ffe9a8;
+      --sky: #b7dcff;
+      --rose: #ffafcf;
+      --violet: #7664d8;
+      --coral: #f47d72;
+      --shadow: 0 22px 55px rgba(88, 72, 110, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 16% 12%, rgba(201, 182, 255, 0.46), transparent 31%),
+        radial-gradient(circle at 84% 14%, rgba(188, 235, 220, 0.62), transparent 29%),
+        radial-gradient(circle at 74% 88%, rgba(255, 208, 189, 0.48), transparent 33%),
+        linear-gradient(145deg, #fff8fb, #f3fbff 52%, #fff9ed);
+    }
+
+    .shell {
+      width: min(1220px, calc(100vw - 32px));
+      height: min(790px, calc(100vh - 32px));
+      margin: 16px auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 410px;
+      border: 1px solid rgba(234, 223, 232, 0.9);
+      background: rgba(255, 255, 255, 0.58);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .chat {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+      border-right: 1px solid var(--line);
+    }
+
+    .topbar {
+      min-height: 80px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, var(--lilac), var(--sky));
+      color: #352a7b;
+      font-weight: 900;
+      border: 1px solid rgba(118, 100, 216, 0.24);
+      border-radius: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-pill {
+      min-width: 112px;
+      padding: 9px 12px;
+      border: 1px solid rgba(118, 100, 216, 0.2);
+      border-radius: 999px;
+      background: #f6f1ff;
+      color: #6555bf;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .messages {
+      padding: 26px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .bubble {
+      width: fit-content;
+      max-width: min(640px, 88%);
+      padding: 14px 16px;
+      border: 1px solid rgba(234, 223, 232, 0.9);
+      border-radius: 20px 20px 20px 7px;
+      background: var(--panel);
+      line-height: 1.45;
+      font-size: 15px;
+      box-shadow: 0 10px 24px rgba(88, 72, 110, 0.08);
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      background: #eef8ff;
+      border-color: #cfebff;
+      border-radius: 20px 20px 7px 20px;
+    }
+
+    .composer {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    input {
+      width: 100%;
+      min-height: 50px;
+      border: 1px solid #dfd4e5;
+      border-radius: 15px;
+      padding: 0 15px;
+      font: inherit;
+      background: white;
+      color: var(--ink);
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--violet);
+      box-shadow: 0 0 0 4px rgba(201, 182, 255, 0.38);
+    }
+
+    button {
+      min-width: 116px;
+      border: 0;
+      border-radius: 15px;
+      background: linear-gradient(145deg, #7664d8, #4ba7c7);
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 13px 22px rgba(118, 100, 216, 0.22);
+    }
+
+    button:disabled {
+      background: #b8b3c8;
+      cursor: wait;
+      box-shadow: none;
+    }
+
+    .builder {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      background: rgba(255, 255, 255, 0.55);
+      min-width: 0;
+    }
+
+    .builder-head {
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+    .builder-head h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .building-for {
+      margin-top: 8px;
+      min-height: 40px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .meter-wrap {
+      padding: 16px 20px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.36);
+    }
+
+    .meter-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 9px;
+    }
+
+    .meter {
+      height: 12px;
+      border: 1px solid #eadbea;
+      border-radius: 999px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--mint), var(--butter), var(--rose));
+      transition: width 520ms ease;
+    }
+
+    .stage {
+      position: relative;
+      overflow: hidden;
+      min-height: 360px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(183, 220, 255, 0.52), rgba(255, 248, 251, 0.55) 58%, rgba(188, 235, 220, 0.45)),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.24) 1px, transparent 1px);
+      background-size: auto, 34px 34px;
+    }
+
+    .sun {
+      position: absolute;
+      top: 22px;
+      right: 36px;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: #ffe9a8;
+      box-shadow: 0 0 0 12px rgba(255, 233, 168, 0.24);
+    }
+
+    .ground {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 76px;
+      background: linear-gradient(180deg, rgba(188, 235, 220, 0.1), rgba(154, 221, 198, 0.72));
+      border-top: 1px solid rgba(108, 185, 157, 0.3);
+    }
+
+    .house {
+      position: absolute;
+      left: 34px;
+      bottom: 62px;
+      width: 188px;
+      height: 210px;
+    }
+
+    .roof {
+      position: absolute;
+      left: 17px;
+      top: 2px;
+      width: 154px;
+      height: 112px;
+      opacity: 0;
+      clip-path: polygon(50% 0, 100% 72%, 88% 72%, 88% 100%, 12% 100%, 12% 72%, 0 72%);
+      background: linear-gradient(145deg, #ffafcf, #f47d72);
+      border: 2px solid rgba(131, 69, 92, 0.22);
+      transform: translateY(-16px);
+      transition: opacity 500ms ease, transform 500ms ease;
+    }
+
+    .roof.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .wall {
+      position: absolute;
+      left: 18px;
+      bottom: 0;
+      width: 152px;
+      height: 126px;
+    }
+
+    .brick {
+      position: absolute;
+      width: 47px;
+      height: 25px;
+      border-radius: 7px;
+      background: #ffd0bd;
+      border: 1px solid rgba(136, 76, 70, 0.18);
+      box-shadow: inset 0 -4px 0 rgba(210, 98, 91, 0.12);
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 260ms ease, transform 260ms ease;
+    }
+
+    .brick.placed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .brick:nth-child(3n + 1) { background: #ffd0bd; }
+    .brick:nth-child(3n + 2) { background: #ffe2a8; }
+    .brick:nth-child(3n + 3) { background: #ffc1d9; }
+
+    .window {
+      position: absolute;
+      width: 34px;
+      height: 33px;
+      left: 26px;
+      bottom: 42px;
+      border-radius: 8px;
+      border: 3px solid #fff;
+      background: linear-gradient(145deg, #b7dcff, #eaf7ff);
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 320ms ease, transform 320ms ease;
+    }
+
+    .door {
+      position: absolute;
+      right: 27px;
+      bottom: 0;
+      width: 36px;
+      height: 58px;
+      border-radius: 12px 12px 4px 4px;
+      background: #7664d8;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 320ms ease, transform 320ms ease;
+    }
+
+    .window.show,
+    .door.show {
+      opacity: 1;
+      transform: none;
+    }
+
+    .stack {
+      position: absolute;
+      right: 30px;
+      bottom: 70px;
+      width: 126px;
+      height: 118px;
+    }
+
+    .stack-brick {
+      position: absolute;
+      width: 48px;
+      height: 24px;
+      border-radius: 7px;
+      background: #ffd0bd;
+      border: 1px solid rgba(136, 76, 70, 0.16);
+      box-shadow: inset 0 -4px 0 rgba(210, 98, 91, 0.12);
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+
+    .stack-brick.used {
+      opacity: 0.2;
+      transform: translateY(8px);
+    }
+
+    .worker {
+      position: absolute;
+      left: 266px;
+      bottom: 78px;
+      width: 48px;
+      height: 88px;
+      transform: translateX(0);
+      transition: transform 620ms cubic-bezier(.45, .05, .18, 1);
+      z-index: 5;
+    }
+
+    .worker.to-house {
+      transform: translateX(-148px);
+    }
+
+    .head {
+      position: absolute;
+      left: 12px;
+      top: 4px;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #f7bba7;
+      border: 2px solid rgba(83, 61, 69, 0.14);
+    }
+
+    .helmet {
+      position: absolute;
+      left: 9px;
+      top: 0;
+      width: 31px;
+      height: 17px;
+      border-radius: 18px 18px 6px 6px;
+      background: #ffe26f;
+      border: 2px solid rgba(134, 105, 15, 0.16);
+      z-index: 1;
+    }
+
+    .body {
+      position: absolute;
+      left: 10px;
+      top: 33px;
+      width: 29px;
+      height: 37px;
+      border-radius: 12px 12px 9px 9px;
+      background: #7664d8;
+    }
+
+    .leg {
+      position: absolute;
+      top: 66px;
+      width: 10px;
+      height: 22px;
+      border-radius: 6px;
+      background: #516172;
+      transform-origin: top center;
+    }
+
+    .leg.left { left: 13px; }
+    .leg.right { left: 27px; }
+    .worker.walking .leg.left { animation: step-left 430ms ease-in-out infinite; }
+    .worker.walking .leg.right { animation: step-right 430ms ease-in-out infinite; }
+
+    @keyframes step-left {
+      50% { transform: rotate(18deg); }
+    }
+
+    @keyframes step-right {
+      50% { transform: rotate(-18deg); }
+    }
+
+    .carry-brick {
+      position: absolute;
+      left: -8px;
+      top: 38px;
+      width: 38px;
+      height: 20px;
+      border-radius: 6px;
+      background: #ffb9cf;
+      border: 1px solid rgba(136, 76, 70, 0.16);
+      opacity: 0;
+      transform: rotate(-8deg);
+      transition: opacity 160ms ease;
+    }
+
+    .worker.carrying .carry-brick {
+      opacity: 1;
+    }
+
+    .steps {
+      padding: 16px 20px 20px;
+      display: grid;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.42);
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border: 1px solid #d7cbe2;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    .step.live {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .step.live .dot {
+      background: var(--rose);
+      border-color: var(--rose);
+      box-shadow: 0 0 0 5px rgba(255, 175, 207, 0.22);
+    }
+
+    .step.done .dot {
+      background: var(--mint);
+      border-color: #8ddfc6;
+    }
+
+    @media (max-width: 900px) {
+      .shell {
+        height: auto;
+        min-height: calc(100vh - 24px);
+        width: calc(100vw - 24px);
+        grid-template-columns: 1fr;
+        margin: 12px auto;
+      }
+
+      .chat {
+        min-height: 54vh;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .builder {
+        min-height: 560px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .status-pill {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="chat" aria-label="Builder chat">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">B</div>
+          <div>
+            <h1>Builder Seed</h1>
+            <div class="sub">Ask for an upgrade. Watch it become a tiny build site.</div>
+          </div>
+        </div>
+        <div class="status-pill" id="statusPill">Ready</div>
+      </header>
+
+      <div class="messages" id="messages">
+        <div class="bubble">What should I build into myself next?</div>
+      </div>
+
+      <form class="composer" id="composer">
+        <input id="requestInput" autocomplete="off" value="Add a task board with three columns" aria-label="Feature request">
+        <button id="buildButton" type="submit">Build</button>
+      </form>
+    </section>
+
+    <aside class="builder" aria-label="Builder companion">
+      <div class="builder-head">
+        <h2>Build Site</h2>
+        <div class="building-for" id="buildingFor">Waiting for the next feature request.</div>
+      </div>
+
+      <div class="meter-wrap">
+        <div class="meter-meta">
+          <span id="stageLabel">Idle</span>
+          <span id="etaLabel">ETA --</span>
+        </div>
+        <div class="meter" aria-label="Build progress">
+          <div class="meter-fill" id="meterFill"></div>
+        </div>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="sun"></div>
+        <div class="house" aria-hidden="true">
+          <div class="roof" id="roof"></div>
+          <div class="wall" id="wall">
+            <div class="window" id="window"></div>
+            <div class="door" id="door"></div>
+          </div>
+        </div>
+        <div class="stack" id="stack" aria-hidden="true"></div>
+        <div class="worker" id="worker" aria-hidden="true">
+          <div class="helmet"></div>
+          <div class="head"></div>
+          <div class="body"></div>
+          <div class="carry-brick"></div>
+          <div class="leg left"></div>
+          <div class="leg right"></div>
+        </div>
+        <div class="ground"></div>
+      </div>
+
+      <div class="steps" id="steps">
+        <div class="step"><span class="dot"></span><span>Read the request</span></div>
+        <div class="step"><span class="dot"></span><span>Choose the foundation</span></div>
+        <div class="step"><span class="dot"></span><span>Lay bricks one by one</span></div>
+        <div class="step"><span class="dot"></span><span>Add doors and windows</span></div>
+        <div class="step"><span class="dot"></span><span>Hand over the new room</span></div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const composer = document.querySelector("#composer");
+    const input = document.querySelector("#requestInput");
+    const messages = document.querySelector("#messages");
+    const button = document.querySelector("#buildButton");
+    const buildingFor = document.querySelector("#buildingFor");
+    const meterFill = document.querySelector("#meterFill");
+    const stageLabel = document.querySelector("#stageLabel");
+    const etaLabel = document.querySelector("#etaLabel");
+    const statusPill = document.querySelector("#statusPill");
+    const steps = [...document.querySelectorAll(".step")];
+    const wall = document.querySelector("#wall");
+    const stack = document.querySelector("#stack");
+    const worker = document.querySelector("#worker");
+    const roof = document.querySelector("#roof");
+    const houseWindow = document.querySelector("#window");
+    const door = document.querySelector("#door");
+
+    const buildSteps = [
+      { label: "Reading brief", eta: "18s", progress: 12, text: "I am reading the upgrade and finding the shape of it." },
+      { label: "Foundation", eta: "14s", progress: 28, text: "I am setting the base so the new feature has somewhere to live." },
+      { label: "Brickwork", eta: "8s", progress: 70, text: "Now I am placing the feature brick by brick." },
+      { label: "Fittings", eta: "3s", progress: 88, text: "I am adding the useful parts: controls, state, and preview." },
+      { label: "Ready", eta: "0s", progress: 100, text: "Done. The new room is ready to walk into." }
+    ];
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function addBubble(text, role = "") {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${role}`.trim();
+      bubble.textContent = text;
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function setStep(activeIndex) {
+      steps.forEach((step, index) => {
+        step.classList.toggle("done", index < activeIndex);
+        step.classList.toggle("live", index === activeIndex);
+      });
+    }
+
+    function resetSite() {
+      wall.querySelectorAll(".brick").forEach((brick) => brick.remove());
+      stack.replaceChildren();
+      roof.classList.remove("show");
+      houseWindow.classList.remove("show");
+      door.classList.remove("show");
+      worker.className = "worker";
+
+      for (let i = 0; i < 12; i += 1) {
+        const stackBrick = document.createElement("div");
+        stackBrick.className = "stack-brick";
+        stackBrick.style.left = `${(i % 2) * 42 + (Math.floor(i / 2) % 2 ? 16 : 0)}px`;
+        stackBrick.style.bottom = `${Math.floor(i / 2) * 16}px`;
+        stackBrick.style.background = ["#ffd0bd", "#ffe2a8", "#ffc1d9"][i % 3];
+        stack.appendChild(stackBrick);
+      }
+    }
+
+    function createWallBrick(index) {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      const brick = document.createElement("div");
+      brick.className = "brick";
+      brick.style.left = `${col * 50 + (row % 2 ? 25 : 0)}px`;
+      brick.style.bottom = `${row * 27}px`;
+      wall.appendChild(brick);
+      return brick;
+    }
+
+    async function layBrick(index) {
+      const stackBricks = [...stack.querySelectorAll(".stack-brick")];
+      const stackBrick = stackBricks[index];
+      worker.classList.add("walking");
+      await wait(220);
+      worker.classList.add("carrying");
+      if (stackBrick) stackBrick.classList.add("used");
+      await wait(220);
+      worker.classList.add("to-house");
+      await wait(620);
+      const brick = createWallBrick(index);
+      requestAnimationFrame(() => brick.classList.add("placed"));
+      worker.classList.remove("carrying");
+      await wait(240);
+      worker.classList.remove("to-house");
+      await wait(520);
+    }
+
+    async function runBuild(request) {
+      button.disabled = true;
+      statusPill.textContent = "Building";
+      buildingFor.textContent = request;
+      meterFill.style.width = "0%";
+      resetSite();
+
+      for (let i = 0; i < buildSteps.length; i += 1) {
+        const step = buildSteps[i];
+        setStep(i);
+        stageLabel.textContent = step.label;
+        etaLabel.textContent = `ETA ${step.eta}`;
+        meterFill.style.width = `${step.progress}%`;
+        addBubble(step.text);
+
+        if (i === 2) {
+          for (let brickIndex = 0; brickIndex < 12; brickIndex += 1) {
+            await layBrick(brickIndex);
+            meterFill.style.width = `${38 + brickIndex * 3}%`;
+          }
+          worker.classList.remove("walking");
+        } else if (i === 3) {
+          houseWindow.classList.add("show");
+          await wait(260);
+          door.classList.add("show");
+          await wait(260);
+          roof.classList.add("show");
+          await wait(600);
+        } else {
+          await wait(850);
+        }
+      }
+
+      steps.forEach((step) => {
+        step.classList.add("done");
+        step.classList.remove("live");
+      });
+      meterFill.style.width = "100%";
+      stageLabel.textContent = "Complete";
+      etaLabel.textContent = "ETA 0s";
+      statusPill.textContent = "Ready";
+      button.disabled = false;
+      input.value = "";
+      input.focus();
+    }
+
+    composer.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const request = input.value.trim();
+      if (!request || button.disabled) return;
+      addBubble(request, "user");
+      runBuild(request);
+    });
+
+    resetSite();
+  </script>
+</body>
+</html>
