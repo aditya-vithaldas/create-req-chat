@@ -1,17 +1,23 @@
 # Create Req Chat
 
-Create Req Chat is a voice-first requirements-definition companion. It starts with a centered live voice hero on the left and a softer formatted requirements document on the right. As the user speaks, each completed spoken turn becomes part of the conversation and the document updates in real time so gaps are visible immediately.
+Create Req Chat is a voice-first requirements-definition companion. It keeps a compact app header across the top, a minimal voice conversation surface on the left, and a formatted requirements document on the right.
 
 The product goal is to force clear thinking before implementation starts. Instead of asking for a short prompt and producing shallow requirements, the app walks the user through target segment, competition, standard capabilities, differential capabilities, user love, user hate, scope, acceptance criteria, and open risks.
 
 ## Current Experience
 
-- Left pane: centered voice conversation hero with a single Start/Live control, assistant prompts, answer-quality guidance, spoken user turns, transcript copy, restart, and progress by section.
+- Left pane: uncluttered voice surface with one Start/Live control, the current prompt, answer-quality guidance, and progress.
 - Right pane: formatted `Requirements.md` document by default, with markdown source available as a secondary tab for copy/download. Pending sections are visually subtle; filled sections become firmer as the spec takes shape.
 - Draft state: stored in browser `localStorage` so a user can refresh without losing the current conversation.
 - Voice path: browser speech capture and browser speech synthesis work as the local fallback. Gemini Live is prepared through a backend token endpoint for full real-time voice streaming.
 
 There is intentionally no typed-answer form in the main workflow. The primary experience is conversation: the assistant asks a question, the user speaks, the spoken answer is captured as a live chat turn, and the document on the right updates.
+
+## Screenshots
+
+![Create Req Chat voice-first workspace](docs/screenshots/voice-requirements-workspace.svg)
+
+The first screen keeps the voice control uncluttered, with the formatted requirements document updating on the right.
 
 ## Requirements Template
 
