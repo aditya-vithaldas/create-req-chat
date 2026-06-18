@@ -1,13 +1,13 @@
 # Create Req Chat
 
-Create Req Chat is a voice-first requirements-definition companion. It starts with a live spoken conversation on the left and a formatted requirements document on the right. As the user speaks, each completed spoken turn becomes part of the conversation and the document updates in real time so gaps are visible immediately.
+Create Req Chat is a voice-first requirements-definition companion. It starts with a centered live voice hero on the left and a softer formatted requirements document on the right. As the user speaks, each completed spoken turn becomes part of the conversation and the document updates in real time so gaps are visible immediately.
 
 The product goal is to force clear thinking before implementation starts. Instead of asking for a short prompt and producing shallow requirements, the app walks the user through target segment, competition, standard capabilities, differential capabilities, user love, user hate, scope, acceptance criteria, and open risks.
 
 ## Current Experience
 
-- Left pane: live voice conversation with a single Start/Live control, assistant prompts, spoken user turns, transcript copy, restart, and progress by section.
-- Right pane: formatted `Requirements.md` document by default, with markdown source available as a secondary tab for copy/download.
+- Left pane: centered voice conversation hero with a single Start/Live control, assistant prompts, answer-quality guidance, spoken user turns, transcript copy, restart, and progress by section.
+- Right pane: formatted `Requirements.md` document by default, with markdown source available as a secondary tab for copy/download. Pending sections are visually subtle; filled sections become firmer as the spec takes shape.
 - Draft state: stored in browser `localStorage` so a user can refresh without losing the current conversation.
 - Voice path: browser speech capture and browser speech synthesis work as the local fallback. Gemini Live is prepared through a backend token endpoint for full real-time voice streaming.
 
@@ -33,22 +33,20 @@ The markdown document keeps these sections visible from the start. Empty section
 
 ## Interview Flow
 
-The interview asks 30 questions across these areas:
+The interview asks 20 questions across these areas:
 
 - Product shape
 - Target segment
 - Problem
 - Goals
 - Competition
-- Core features
-- Differentiation
+- Capabilities
 - Experience
-- Constraints
 - Love and hate
 - Scope
 - Validation
 
-Each spoken answer is stored by key and then synthesized into the formatted document. This makes the document useful while the conversation is still unfinished.
+Each prompt includes a short indicator for what a strong answer should contain, so the user is nudged toward examples, tradeoffs, constraints, competitors, and measurable criteria instead of yes-or-no answers. Each spoken answer is stored by key and then synthesized into the formatted document. This makes the document useful while the conversation is still unfinished.
 
 ## Gemini Live Voice Plan
 
@@ -100,13 +98,13 @@ http://localhost:4173
 
 ## Static Preview
 
-The app still works as a plain static file for typed conversations and markdown generation:
+The app still opens as a plain static file for UI preview and browser speech fallback:
 
 ```bash
 open index.html
 ```
 
-Static mode cannot securely create Gemini Live tokens. For Gemini Live voice, run the Node server so `/api/gemini-live-token` can read `.env` and mint ephemeral tokens server-side.
+Static mode cannot securely create Gemini Live tokens. For Gemini Live voice token minting, run the Node server so `/api/gemini-live-token` can read `.env` and mint ephemeral tokens server-side.
 
 ## Token Handling
 
