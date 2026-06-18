@@ -3,24 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Self-Building Chat Prototype</title>
+  <title>Create Req Chat</title>
   <style>
     :root {
       color-scheme: light;
-      --ink: #26313a;
-      --muted: #74818b;
-      --line: #eadfe8;
-      --paper: #fff8fb;
-      --panel: rgba(255, 255, 255, 0.82);
-      --lilac: #c9b6ff;
-      --mint: #bcebdc;
-      --peach: #ffd0bd;
-      --butter: #ffe9a8;
-      --sky: #b7dcff;
-      --rose: #ffafcf;
-      --violet: #7664d8;
-      --coral: #f47d72;
-      --shadow: 0 22px 55px rgba(88, 72, 110, 0.16);
+      --ink: #1f2933;
+      --muted: #647282;
+      --paper: #ffffff;
+      --soft: #f4f7fb;
+      --line: #d9e2ec;
+      --line-strong: #b8c6d6;
+      --brand: #2167e8;
+      --brand-dark: #1449aa;
+      --accent: #0c967f;
+      --danger: #bd3150;
+      --warning: #a85a00;
+      --shadow: 0 18px 52px rgba(31, 41, 51, 0.12);
+      --radius: 8px;
     }
 
     * {
@@ -32,739 +31,991 @@
       min-height: 100vh;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--ink);
-      background:
-        radial-gradient(circle at 16% 12%, rgba(201, 182, 255, 0.46), transparent 31%),
-        radial-gradient(circle at 84% 14%, rgba(188, 235, 220, 0.62), transparent 29%),
-        radial-gradient(circle at 74% 88%, rgba(255, 208, 189, 0.48), transparent 33%),
-        linear-gradient(145deg, #fff8fb, #f3fbff 52%, #fff9ed);
+      background: linear-gradient(180deg, #f7fafc 0%, #edf3f8 100%);
     }
 
-    .shell {
-      width: min(1220px, calc(100vw - 32px));
-      height: min(790px, calc(100vh - 32px));
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1500px, calc(100vw - 32px));
+      min-height: calc(100vh - 32px);
       margin: 16px auto;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 410px;
-      border: 1px solid rgba(234, 223, 232, 0.9);
-      background: rgba(255, 255, 255, 0.58);
+      grid-template-columns: minmax(380px, 0.9fr) minmax(540px, 1.1fr);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
       box-shadow: var(--shadow);
       overflow: hidden;
-      backdrop-filter: blur(18px);
     }
 
-    .chat {
-      display: grid;
-      grid-template-rows: auto 1fr auto;
+    .conversation,
+    .document {
       min-width: 0;
+      min-height: 0;
+    }
+
+    .conversation {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
       border-right: 1px solid var(--line);
+      background: #fbfdff;
     }
 
-    .topbar {
-      min-height: 80px;
-      padding: 18px 22px;
+    .topbar,
+    .doc-head {
+      padding: 18px 20px 14px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: 16px;
+      gap: 14px;
       border-bottom: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.7);
+      background: #fff;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .mark {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(145deg, var(--lilac), var(--sky));
-      color: #352a7b;
-      font-weight: 900;
-      border: 1px solid rgba(118, 100, 216, 0.24);
-      border-radius: 12px;
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
     }
 
     h1 {
-      margin: 0;
-      font-size: 20px;
+      font-size: 21px;
       line-height: 1.1;
       letter-spacing: 0;
     }
 
-    .sub {
-      margin-top: 5px;
+    h2 {
+      font-size: 19px;
+      line-height: 1.15;
+    }
+
+    .subtitle,
+    .doc-status,
+    .voice-hint,
+    .live-caption {
       color: var(--muted);
       font-size: 13px;
+      line-height: 1.38;
     }
 
-    .status-pill {
-      min-width: 112px;
-      padding: 9px 12px;
-      border: 1px solid rgba(118, 100, 216, 0.2);
-      border-radius: 999px;
-      background: #f6f1ff;
-      color: #6555bf;
-      font-size: 13px;
-      font-weight: 700;
-      text-align: center;
+    .subtitle {
+      margin-top: 6px;
     }
 
-    .messages {
-      padding: 26px;
-      overflow: auto;
+    .session-actions,
+    .doc-actions {
       display: flex;
-      flex-direction: column;
-      gap: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
     }
 
-    .bubble {
-      width: fit-content;
-      max-width: min(640px, 88%);
-      padding: 14px 16px;
-      border: 1px solid rgba(234, 223, 232, 0.9);
-      border-radius: 20px 20px 20px 7px;
-      background: var(--panel);
-      line-height: 1.45;
-      font-size: 15px;
-      box-shadow: 0 10px 24px rgba(88, 72, 110, 0.08);
-    }
-
-    .bubble.user {
-      align-self: flex-end;
-      background: #eef8ff;
-      border-color: #cfebff;
-      border-radius: 20px 20px 7px 20px;
-    }
-
-    .composer {
-      padding: 16px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      border-top: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.72);
-    }
-
-    input {
-      width: 100%;
-      min-height: 50px;
-      border: 1px solid #dfd4e5;
-      border-radius: 15px;
-      padding: 0 15px;
-      font: inherit;
-      background: white;
+    .ghost-button,
+    .secondary-button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
       color: var(--ink);
-      outline: none;
+      font-size: 13px;
+      font-weight: 750;
     }
 
-    input:focus {
-      border-color: var(--violet);
-      box-shadow: 0 0 0 4px rgba(201, 182, 255, 0.38);
+    .secondary-button {
+      background: #edf4ff;
+      border-color: #c9dcff;
+      color: var(--brand-dark);
     }
 
-    button {
-      min-width: 116px;
-      border: 0;
-      border-radius: 15px;
-      background: linear-gradient(145deg, #7664d8, #4ba7c7);
-      color: white;
-      font: inherit;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 13px 22px rgba(118, 100, 216, 0.22);
-    }
-
-    button:disabled {
-      background: #b8b3c8;
-      cursor: wait;
-      box-shadow: none;
-    }
-
-    .builder {
+    .progress-wrap {
+      padding: 12px 20px;
       display: grid;
-      grid-template-rows: auto auto 1fr auto;
-      background: rgba(255, 255, 255, 0.55);
-      min-width: 0;
-    }
-
-    .builder-head {
-      padding: 20px;
+      gap: 10px;
       border-bottom: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.42);
+      background: #f7fafd;
     }
 
-    .builder-head h2 {
-      margin: 0;
-      font-size: 17px;
-      letter-spacing: 0;
-    }
-
-    .building-for {
-      margin-top: 8px;
-      min-height: 40px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.35;
-    }
-
-    .meter-wrap {
-      padding: 16px 20px 18px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.36);
-    }
-
-    .meter-meta {
+    .progress-meta {
       display: flex;
       justify-content: space-between;
       gap: 12px;
       color: var(--muted);
       font-size: 13px;
-      margin-bottom: 9px;
     }
 
-    .meter {
-      height: 12px;
-      border: 1px solid #eadbea;
+    .progress-track {
+      height: 8px;
       border-radius: 999px;
-      background: #fff;
+      background: #e5edf5;
       overflow: hidden;
     }
 
-    .meter-fill {
-      width: 0%;
+    .progress-fill {
+      width: 0;
       height: 100%;
       border-radius: inherit;
-      background: linear-gradient(90deg, var(--mint), var(--butter), var(--rose));
-      transition: width 520ms ease;
+      background: linear-gradient(90deg, var(--brand), var(--accent));
+      transition: width 220ms ease;
     }
 
-    .stage {
-      position: relative;
-      overflow: hidden;
-      min-height: 360px;
-      border-bottom: 1px solid var(--line);
-      background:
-        linear-gradient(180deg, rgba(183, 220, 255, 0.52), rgba(255, 248, 251, 0.55) 58%, rgba(188, 235, 220, 0.45)),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.24) 1px, transparent 1px);
-      background-size: auto, 34px 34px;
-    }
-
-    .sun {
-      position: absolute;
-      top: 22px;
-      right: 36px;
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      background: #ffe9a8;
-      box-shadow: 0 0 0 12px rgba(255, 233, 168, 0.24);
-    }
-
-    .ground {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 76px;
-      background: linear-gradient(180deg, rgba(188, 235, 220, 0.1), rgba(154, 221, 198, 0.72));
-      border-top: 1px solid rgba(108, 185, 157, 0.3);
-    }
-
-    .house {
-      position: absolute;
-      left: 34px;
-      bottom: 62px;
-      width: 188px;
-      height: 210px;
-    }
-
-    .roof {
-      position: absolute;
-      left: 17px;
-      top: 2px;
-      width: 154px;
-      height: 112px;
-      opacity: 0;
-      clip-path: polygon(50% 0, 100% 72%, 88% 72%, 88% 100%, 12% 100%, 12% 72%, 0 72%);
-      background: linear-gradient(145deg, #ffafcf, #f47d72);
-      border: 2px solid rgba(131, 69, 92, 0.22);
-      transform: translateY(-16px);
-      transition: opacity 500ms ease, transform 500ms ease;
-    }
-
-    .roof.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .wall {
-      position: absolute;
-      left: 18px;
-      bottom: 0;
-      width: 152px;
-      height: 126px;
-    }
-
-    .brick {
-      position: absolute;
-      width: 47px;
-      height: 25px;
-      border-radius: 7px;
-      background: #ffd0bd;
-      border: 1px solid rgba(136, 76, 70, 0.18);
-      box-shadow: inset 0 -4px 0 rgba(210, 98, 91, 0.12);
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 260ms ease, transform 260ms ease;
-    }
-
-    .brick.placed {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .brick:nth-child(3n + 1) { background: #ffd0bd; }
-    .brick:nth-child(3n + 2) { background: #ffe2a8; }
-    .brick:nth-child(3n + 3) { background: #ffc1d9; }
-
-    .window {
-      position: absolute;
-      width: 34px;
-      height: 33px;
-      left: 26px;
-      bottom: 42px;
-      border-radius: 8px;
-      border: 3px solid #fff;
-      background: linear-gradient(145deg, #b7dcff, #eaf7ff);
-      opacity: 0;
-      transform: scale(0.8);
-      transition: opacity 320ms ease, transform 320ms ease;
-    }
-
-    .door {
-      position: absolute;
-      right: 27px;
-      bottom: 0;
-      width: 36px;
-      height: 58px;
-      border-radius: 12px 12px 4px 4px;
-      background: #7664d8;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 320ms ease, transform 320ms ease;
-    }
-
-    .window.show,
-    .door.show {
-      opacity: 1;
-      transform: none;
-    }
-
-    .stack {
-      position: absolute;
-      right: 30px;
-      bottom: 70px;
-      width: 126px;
-      height: 118px;
-    }
-
-    .stack-brick {
-      position: absolute;
-      width: 48px;
-      height: 24px;
-      border-radius: 7px;
-      background: #ffd0bd;
-      border: 1px solid rgba(136, 76, 70, 0.16);
-      box-shadow: inset 0 -4px 0 rgba(210, 98, 91, 0.12);
-      transition: opacity 220ms ease, transform 220ms ease;
-    }
-
-    .stack-brick.used {
-      opacity: 0.2;
-      transform: translateY(8px);
-    }
-
-    .worker {
-      position: absolute;
-      left: 266px;
-      bottom: 78px;
-      width: 48px;
-      height: 88px;
-      transform: translateX(0);
-      transition: transform 620ms cubic-bezier(.45, .05, .18, 1);
-      z-index: 5;
-    }
-
-    .worker.to-house {
-      transform: translateX(-148px);
-    }
-
-    .head {
-      position: absolute;
-      left: 12px;
-      top: 4px;
-      width: 25px;
-      height: 25px;
-      border-radius: 50%;
-      background: #f7bba7;
-      border: 2px solid rgba(83, 61, 69, 0.14);
-    }
-
-    .helmet {
-      position: absolute;
-      left: 9px;
-      top: 0;
-      width: 31px;
-      height: 17px;
-      border-radius: 18px 18px 6px 6px;
-      background: #ffe26f;
-      border: 2px solid rgba(134, 105, 15, 0.16);
-      z-index: 1;
-    }
-
-    .body {
-      position: absolute;
-      left: 10px;
-      top: 33px;
-      width: 29px;
-      height: 37px;
-      border-radius: 12px 12px 9px 9px;
-      background: #7664d8;
-    }
-
-    .leg {
-      position: absolute;
-      top: 66px;
-      width: 10px;
-      height: 22px;
-      border-radius: 6px;
-      background: #516172;
-      transform-origin: top center;
-    }
-
-    .leg.left { left: 13px; }
-    .leg.right { left: 27px; }
-    .worker.walking .leg.left { animation: step-left 430ms ease-in-out infinite; }
-    .worker.walking .leg.right { animation: step-right 430ms ease-in-out infinite; }
-
-    @keyframes step-left {
-      50% { transform: rotate(18deg); }
-    }
-
-    @keyframes step-right {
-      50% { transform: rotate(-18deg); }
-    }
-
-    .carry-brick {
-      position: absolute;
-      left: -8px;
-      top: 38px;
-      width: 38px;
-      height: 20px;
-      border-radius: 6px;
-      background: #ffb9cf;
-      border: 1px solid rgba(136, 76, 70, 0.16);
-      opacity: 0;
-      transform: rotate(-8deg);
-      transition: opacity 160ms ease;
-    }
-
-    .worker.carrying .carry-brick {
-      opacity: 1;
-    }
-
-    .steps {
-      padding: 16px 20px 20px;
-      display: grid;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.42);
-    }
-
-    .step {
+    .section-rail {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 14px;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
     }
 
-    .dot {
-      width: 12px;
-      height: 12px;
-      border: 1px solid #d7cbe2;
-      border-radius: 50%;
+    .section-chip {
+      flex: 0 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 9px;
       background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
     }
 
-    .step.live {
-      color: var(--ink);
+    .section-chip.active {
+      background: #e9f1ff;
+      border-color: #c3d9ff;
+      color: var(--brand-dark);
       font-weight: 800;
     }
 
-    .step.live .dot {
-      background: var(--rose);
-      border-color: var(--rose);
-      box-shadow: 0 0 0 5px rgba(255, 175, 207, 0.22);
+    .messages {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .step.done .dot {
-      background: var(--mint);
-      border-color: #8ddfc6;
+    .bubble {
+      max-width: min(650px, 95%);
+      width: fit-content;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px 16px 16px 6px;
+      background: #fff;
+      line-height: 1.45;
+      font-size: 14px;
+      box-shadow: 0 8px 24px rgba(31, 41, 51, 0.06);
     }
 
-    @media (max-width: 900px) {
-      .shell {
-        height: auto;
-        min-height: calc(100vh - 24px);
-        width: calc(100vw - 24px);
+    .bubble.assistant {
+      border-color: #cfe1ff;
+      background: #f2f7ff;
+    }
+
+    .bubble.user {
+      align-self: flex-end;
+      border-color: #cce3dc;
+      border-radius: 16px 16px 6px 16px;
+      background: #effbf7;
+    }
+
+    .bubble.system {
+      max-width: 100%;
+      width: auto;
+      border-color: #d4e4ef;
+      background: #f5f9fc;
+      color: #425466;
+      box-shadow: none;
+    }
+
+    .live-panel {
+      padding: 14px 16px 16px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .talk-button {
+      width: 92px;
+      min-height: 92px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 16px 28px rgba(33, 103, 232, 0.24);
+    }
+
+    .talk-button.listening {
+      background: var(--danger);
+      box-shadow: 0 16px 28px rgba(189, 49, 80, 0.22);
+    }
+
+    .talk-button.idle {
+      background: var(--ink);
+    }
+
+    .voice-state {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .voice-title {
+      font-size: 15px;
+      font-weight: 850;
+    }
+
+    .live-caption {
+      min-height: 38px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #f8fbfe;
+      color: #364757;
+    }
+
+    .voice-hint strong {
+      color: var(--ink);
+    }
+
+    .document {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      background: #fff;
+    }
+
+    .doc-title {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .doc-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--line);
+      background: #f7fafd;
+    }
+
+    .tab-button {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .tab-button.active {
+      border-color: var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .doc-body {
+      min-height: 0;
+      display: grid;
+    }
+
+    .requirements-preview {
+      overflow: auto;
+      padding: 24px 28px 34px;
+      background: #fff;
+      line-height: 1.6;
+    }
+
+    .requirements-preview h1 {
+      margin: 0 0 18px;
+      font-size: 27px;
+      line-height: 1.15;
+    }
+
+    .requirements-preview h2 {
+      margin: 26px 0 9px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--line);
+      font-size: 18px;
+    }
+
+    .requirements-preview p,
+    .requirements-preview ul {
+      margin: 0 0 12px;
+    }
+
+    .requirements-preview ul {
+      padding-left: 22px;
+    }
+
+    .requirements-preview li {
+      margin: 5px 0;
+    }
+
+    .pending {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .markdown-editor {
+      width: 100%;
+      min-height: 0;
+      border: 0;
+      outline: none;
+      resize: none;
+      padding: 22px 24px 30px;
+      font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      color: #17212b;
+      background: #fff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1040px) {
+      .app {
+        width: calc(100vw - 20px);
+        min-height: calc(100vh - 20px);
+        margin: 10px auto;
         grid-template-columns: 1fr;
-        margin: 12px auto;
       }
 
-      .chat {
-        min-height: 54vh;
+      .conversation {
+        min-height: 620px;
         border-right: 0;
         border-bottom: 1px solid var(--line);
       }
 
-      .builder {
-        min-height: 560px;
+      .document {
+        min-height: 720px;
       }
+    }
 
-      .topbar {
-        align-items: flex-start;
+    @media (max-width: 680px) {
+      .topbar,
+      .doc-head {
         flex-direction: column;
       }
 
-      .status-pill {
-        text-align: left;
+      .session-actions,
+      .doc-actions {
+        justify-content: flex-start;
+      }
+
+      .live-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .talk-button {
+        width: 100%;
+        min-height: 60px;
+        border-radius: var(--radius);
       }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <section class="chat" aria-label="Builder chat">
+  <main class="app">
+    <section class="conversation" aria-label="Live voice requirements conversation">
       <header class="topbar">
-        <div class="brand">
-          <div class="mark" aria-hidden="true">B</div>
-          <div>
-            <h1>Builder Seed</h1>
-            <div class="sub">Ask for an upgrade. Watch it become a tiny build site.</div>
-          </div>
+        <div>
+          <h1>Create Req Chat</h1>
+          <p class="subtitle">Voice-first requirements discovery. Speak naturally; the document updates while the conversation unfolds.</p>
         </div>
-        <div class="status-pill" id="statusPill">Ready</div>
+        <div class="session-actions">
+          <button class="ghost-button" id="restartButton" type="button">Restart</button>
+          <button class="secondary-button" id="copyTranscriptButton" type="button">Copy transcript</button>
+        </div>
       </header>
 
-      <div class="messages" id="messages">
-        <div class="bubble">What should I build into myself next?</div>
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span id="questionCounter">Question 1 of 30</span>
+          <span id="completionText">0% complete</span>
+        </div>
+        <div class="progress-track" aria-label="Interview progress">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="section-rail" id="sectionRail" aria-label="Question sections"></div>
       </div>
 
-      <form class="composer" id="composer">
-        <input id="requestInput" autocomplete="off" value="Add a task board with three columns" aria-label="Feature request">
-        <button id="buildButton" type="submit">Build</button>
-      </form>
+      <div class="messages" id="messages" aria-live="polite"></div>
+
+      <div class="live-panel">
+        <button class="talk-button idle" id="talkButton" type="button">Start</button>
+        <div class="voice-state">
+          <div class="voice-title" id="voiceTitle">Voice conversation is paused</div>
+          <div class="live-caption" id="liveCaption">Press Start and answer out loud. Each completed spoken turn updates the formatted requirements document on the right.</div>
+          <div class="voice-hint" id="voiceHint"><strong>Gemini Live target:</strong> the app requests a short-lived token from `/api/gemini-live-token`; browser speech is the local fallback until full audio streaming is connected.</div>
+        </div>
+      </div>
     </section>
 
-    <aside class="builder" aria-label="Builder companion">
-      <div class="builder-head">
-        <h2>Build Site</h2>
-        <div class="building-for" id="buildingFor">Waiting for the next feature request.</div>
-      </div>
+    <section class="document" aria-label="Formatted requirements document">
+      <header class="doc-head">
+        <div class="doc-title">
+          <h2>Requirements.md</h2>
+          <p class="doc-status" id="docStatus">Formatted document updates from spoken answers.</p>
+        </div>
+        <div class="doc-actions">
+          <button class="ghost-button" id="copyMarkdownButton" type="button">Copy MD</button>
+          <button class="secondary-button" id="downloadButton" type="button">Download</button>
+        </div>
+      </header>
 
-      <div class="meter-wrap">
-        <div class="meter-meta">
-          <span id="stageLabel">Idle</span>
-          <span id="etaLabel">ETA --</span>
-        </div>
-        <div class="meter" aria-label="Build progress">
-          <div class="meter-fill" id="meterFill"></div>
-        </div>
-      </div>
+      <nav class="doc-tabs" aria-label="Document view">
+        <button class="tab-button active" id="formattedTab" type="button">Formatted</button>
+        <button class="tab-button" id="markdownTab" type="button">Markdown source</button>
+      </nav>
 
-      <div class="stage" id="stage">
-        <div class="sun"></div>
-        <div class="house" aria-hidden="true">
-          <div class="roof" id="roof"></div>
-          <div class="wall" id="wall">
-            <div class="window" id="window"></div>
-            <div class="door" id="door"></div>
-          </div>
-        </div>
-        <div class="stack" id="stack" aria-hidden="true"></div>
-        <div class="worker" id="worker" aria-hidden="true">
-          <div class="helmet"></div>
-          <div class="head"></div>
-          <div class="body"></div>
-          <div class="carry-brick"></div>
-          <div class="leg left"></div>
-          <div class="leg right"></div>
-        </div>
-        <div class="ground"></div>
+      <div class="doc-body">
+        <article class="requirements-preview" id="requirementsPreview"></article>
+        <textarea class="markdown-editor hidden" id="markdownEditor" readonly aria-label="Markdown source"></textarea>
       </div>
-
-      <div class="steps" id="steps">
-        <div class="step"><span class="dot"></span><span>Read the request</span></div>
-        <div class="step"><span class="dot"></span><span>Choose the foundation</span></div>
-        <div class="step"><span class="dot"></span><span>Lay bricks one by one</span></div>
-        <div class="step"><span class="dot"></span><span>Add doors and windows</span></div>
-        <div class="step"><span class="dot"></span><span>Hand over the new room</span></div>
-      </div>
-    </aside>
+    </section>
   </main>
 
   <script>
-    const composer = document.querySelector("#composer");
-    const input = document.querySelector("#requestInput");
-    const messages = document.querySelector("#messages");
-    const button = document.querySelector("#buildButton");
-    const buildingFor = document.querySelector("#buildingFor");
-    const meterFill = document.querySelector("#meterFill");
-    const stageLabel = document.querySelector("#stageLabel");
-    const etaLabel = document.querySelector("#etaLabel");
-    const statusPill = document.querySelector("#statusPill");
-    const steps = [...document.querySelectorAll(".step")];
-    const wall = document.querySelector("#wall");
-    const stack = document.querySelector("#stack");
-    const worker = document.querySelector("#worker");
-    const roof = document.querySelector("#roof");
-    const houseWindow = document.querySelector("#window");
-    const door = document.querySelector("#door");
-
-    const buildSteps = [
-      { label: "Reading brief", eta: "18s", progress: 12, text: "I am reading the upgrade and finding the shape of it." },
-      { label: "Foundation", eta: "14s", progress: 28, text: "I am setting the base so the new feature has somewhere to live." },
-      { label: "Brickwork", eta: "8s", progress: 70, text: "Now I am placing the feature brick by brick." },
-      { label: "Fittings", eta: "3s", progress: 88, text: "I am adding the useful parts: controls, state, and preview." },
-      { label: "Ready", eta: "0s", progress: 100, text: "Done. The new room is ready to walk into." }
+    const questions = [
+      { key: "productName", section: "Product shape", prompt: "What is the working name of the product or feature?" },
+      { key: "oneLiner", section: "Product shape", prompt: "In one sentence, what should this product do?" },
+      { key: "targetSegment", section: "Target segment", prompt: "Who is the exact target segment?" },
+      { key: "primaryUser", section: "Target segment", prompt: "Who is the primary user, and who is the buyer or decision maker?" },
+      { key: "userJob", section: "Target segment", prompt: "What job is the user trying to get done when they reach for this?" },
+      { key: "currentWorkaround", section: "Problem", prompt: "How do they solve this today without your product?" },
+      { key: "painfulMoment", section: "Problem", prompt: "What is the most painful moment in the current workflow?" },
+      { key: "urgencyTrigger", section: "Problem", prompt: "What event makes the need urgent enough to act now?" },
+      { key: "businessGoal", section: "Goals", prompt: "What business goal should this support?" },
+      { key: "successMetrics", section: "Goals", prompt: "How will we measure whether this worked?" },
+      { key: "directCompetitors", section: "Competition", prompt: "Who are the direct competitors or substitutes?" },
+      { key: "adjacentCompetitors", section: "Competition", prompt: "What adjacent tools or behaviors compete for the user's attention?" },
+      { key: "competitorStrengths", section: "Competition", prompt: "What do those competitors do well?" },
+      { key: "competitorGaps", section: "Competition", prompt: "Where are competitors weak or mismatched for this segment?" },
+      { key: "mustHaveFeatures", section: "Core features", prompt: "What are the must-have capabilities for version one?" },
+      { key: "standardCapabilities", section: "Core features", prompt: "What standard capabilities will users expect by default?" },
+      { key: "differentialCapabilities", section: "Differentiation", prompt: "What capabilities make this meaningfully different?" },
+      { key: "workflow", section: "Experience", prompt: "Walk through the ideal user flow from start to finish." },
+      { key: "onboardingData", section: "Experience", prompt: "What information does the product need from the user to work well?" },
+      { key: "integrations", section: "Experience", prompt: "What systems, files, or data sources should this integrate with?" },
+      { key: "permissionsCompliance", section: "Constraints", prompt: "What permission, privacy, compliance, or security constraints matter?" },
+      { key: "delightMoments", section: "Love and hate", prompt: "Where should the product feel unexpectedly great?" },
+      { key: "whyLove", section: "Love and hate", prompt: "Why would users love this product enough to come back?" },
+      { key: "whyHate", section: "Love and hate", prompt: "Why might users hate it, distrust it, or abandon it?" },
+      { key: "adoptionBarriers", section: "Love and hate", prompt: "What would block adoption even if the product works?" },
+      { key: "nonGoals", section: "Scope", prompt: "What should this explicitly not do in version one?" },
+      { key: "edgeCases", section: "Scope", prompt: "What edge cases or failure states should we design for?" },
+      { key: "launchScope", section: "Scope", prompt: "What is the smallest launch scope that would still be valuable?" },
+      { key: "acceptanceCriteria", section: "Validation", prompt: "What acceptance criteria would prove the build is done?" },
+      { key: "openRisks", section: "Validation", prompt: "What are the biggest open questions or risks?" }
     ];
 
-    function wait(ms) {
-      return new Promise((resolve) => setTimeout(resolve, ms));
+    const stateKey = "create-req-chat-voice-state-v1";
+    const sectionNames = [...new Set(questions.map((question) => question.section))];
+    const geminiLiveConfig = {
+      model: "gemini-3.1-flash-live-preview",
+      tokenEndpoint: "/api/gemini-live-token"
+    };
+
+    const messages = document.querySelector("#messages");
+    const talkButton = document.querySelector("#talkButton");
+    const voiceTitle = document.querySelector("#voiceTitle");
+    const liveCaption = document.querySelector("#liveCaption");
+    const voiceHint = document.querySelector("#voiceHint");
+    const restartButton = document.querySelector("#restartButton");
+    const copyTranscriptButton = document.querySelector("#copyTranscriptButton");
+    const progressFill = document.querySelector("#progressFill");
+    const questionCounter = document.querySelector("#questionCounter");
+    const completionText = document.querySelector("#completionText");
+    const sectionRail = document.querySelector("#sectionRail");
+    const requirementsPreview = document.querySelector("#requirementsPreview");
+    const markdownEditor = document.querySelector("#markdownEditor");
+    const formattedTab = document.querySelector("#formattedTab");
+    const markdownTab = document.querySelector("#markdownTab");
+    const copyMarkdownButton = document.querySelector("#copyMarkdownButton");
+    const downloadButton = document.querySelector("#downloadButton");
+    const docStatus = document.querySelector("#docStatus");
+
+    let answers = {};
+    let transcript = [];
+    let currentIndex = 0;
+    let recognition = null;
+    let live = false;
+    let speaking = false;
+
+    function loadState() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(stateKey));
+        if (stored && typeof stored === "object") {
+          answers = stored.answers || {};
+          transcript = stored.transcript || [];
+          currentIndex = Number.isInteger(stored.currentIndex) ? stored.currentIndex : 0;
+        }
+      } catch {
+        answers = {};
+        transcript = [];
+        currentIndex = 0;
+      }
     }
 
-    function addBubble(text, role = "") {
+    function saveState() {
+      localStorage.setItem(stateKey, JSON.stringify({ answers, transcript, currentIndex }));
+    }
+
+    function answerFor(key) {
+      return (answers[key] || "").trim();
+    }
+
+    function pendingText() {
+      return "Pending conversation.";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function markdownLine(key, label) {
+      const value = answerFor(key);
+      return value ? `- **${label}:** ${value}` : "";
+    }
+
+    function markdownBlock(lines) {
+      return lines.filter(Boolean).join("\n") || pendingText();
+    }
+
+    function htmlBlock(items) {
+      const filled = items.filter((item) => answerFor(item.key));
+      if (!filled.length) return `<p class="pending">${pendingText()}</p>`;
+      return `<ul>${filled.map((item) => `<li><strong>${escapeHtml(item.label)}:</strong> ${escapeHtml(answerFor(item.key))}</li>`).join("")}</ul>`;
+    }
+
+    function paragraphHtml(key) {
+      const value = answerFor(key);
+      return value ? `<p>${escapeHtml(value)}</p>` : `<p class="pending">${pendingText()}</p>`;
+    }
+
+    function buildMarkdown() {
+      const title = answerFor("productName") || "Untitled Product";
+      return `# ${title} Requirements Brief
+
+## Product Summary
+${markdownBlock([
+  markdownLine("oneLiner", "One-liner"),
+  markdownLine("businessGoal", "Business goal"),
+  markdownLine("launchScope", "Smallest valuable launch scope")
+])}
+
+## Target Segment
+${markdownBlock([
+  markdownLine("targetSegment", "Target segment"),
+  markdownLine("primaryUser", "Primary user and buyer"),
+  markdownLine("userJob", "Job to be done")
+])}
+
+## Problem and Urgency
+${markdownBlock([
+  markdownLine("currentWorkaround", "Current workaround"),
+  markdownLine("painfulMoment", "Painful moment"),
+  markdownLine("urgencyTrigger", "Urgency trigger")
+])}
+
+## Competitive Landscape
+${markdownBlock([
+  markdownLine("directCompetitors", "Direct competitors"),
+  markdownLine("adjacentCompetitors", "Adjacent substitutes"),
+  markdownLine("competitorStrengths", "Competitor strengths"),
+  markdownLine("competitorGaps", "Competitor gaps")
+])}
+
+## Core Feature Set
+${markdownBlock([
+  markdownLine("mustHaveFeatures", "Must-have v1 capabilities"),
+  markdownLine("workflow", "Ideal workflow"),
+  markdownLine("onboardingData", "Inputs needed from user")
+])}
+
+## Standard Capabilities
+${markdownBlock([
+  markdownLine("standardCapabilities", "Expected basics"),
+  markdownLine("integrations", "Integrations and data sources"),
+  markdownLine("permissionsCompliance", "Permissions, privacy, and compliance")
+])}
+
+## Differential Capabilities
+${markdownBlock([
+  markdownLine("differentialCapabilities", "Meaningful differentiators"),
+  markdownLine("delightMoments", "Delight moments")
+])}
+
+## Why Users Would Love It
+${answerFor("whyLove") || pendingText()}
+
+## Why Users Might Hate It
+${markdownBlock([
+  markdownLine("whyHate", "Reasons to hate, distrust, or abandon"),
+  markdownLine("adoptionBarriers", "Adoption barriers"),
+  markdownLine("edgeCases", "Edge cases and failure states")
+])}
+
+## Scope Boundaries
+${markdownBlock([
+  markdownLine("nonGoals", "Non-goals"),
+  markdownLine("launchScope", "Launch scope")
+])}
+
+## Success Metrics
+${answerFor("successMetrics") || pendingText()}
+
+## Acceptance Criteria
+${answerFor("acceptanceCriteria") || pendingText()}
+
+## Open Questions and Risks
+${answerFor("openRisks") || pendingText()}
+`;
+    }
+
+    function renderDocument() {
+      const title = answerFor("productName") || "Untitled Product";
+      markdownEditor.value = buildMarkdown();
+      requirementsPreview.innerHTML = `
+        <h1>${escapeHtml(title)} Requirements Brief</h1>
+        <h2>Product Summary</h2>
+        ${htmlBlock([
+          { key: "oneLiner", label: "One-liner" },
+          { key: "businessGoal", label: "Business goal" },
+          { key: "launchScope", label: "Smallest valuable launch scope" }
+        ])}
+        <h2>Target Segment</h2>
+        ${htmlBlock([
+          { key: "targetSegment", label: "Target segment" },
+          { key: "primaryUser", label: "Primary user and buyer" },
+          { key: "userJob", label: "Job to be done" }
+        ])}
+        <h2>Problem and Urgency</h2>
+        ${htmlBlock([
+          { key: "currentWorkaround", label: "Current workaround" },
+          { key: "painfulMoment", label: "Painful moment" },
+          { key: "urgencyTrigger", label: "Urgency trigger" }
+        ])}
+        <h2>Competitive Landscape</h2>
+        ${htmlBlock([
+          { key: "directCompetitors", label: "Direct competitors" },
+          { key: "adjacentCompetitors", label: "Adjacent substitutes" },
+          { key: "competitorStrengths", label: "Competitor strengths" },
+          { key: "competitorGaps", label: "Competitor gaps" }
+        ])}
+        <h2>Core Feature Set</h2>
+        ${htmlBlock([
+          { key: "mustHaveFeatures", label: "Must-have v1 capabilities" },
+          { key: "workflow", label: "Ideal workflow" },
+          { key: "onboardingData", label: "Inputs needed from user" }
+        ])}
+        <h2>Standard Capabilities</h2>
+        ${htmlBlock([
+          { key: "standardCapabilities", label: "Expected basics" },
+          { key: "integrations", label: "Integrations and data sources" },
+          { key: "permissionsCompliance", label: "Permissions, privacy, and compliance" }
+        ])}
+        <h2>Differential Capabilities</h2>
+        ${htmlBlock([
+          { key: "differentialCapabilities", label: "Meaningful differentiators" },
+          { key: "delightMoments", label: "Delight moments" }
+        ])}
+        <h2>Why Users Would Love It</h2>
+        ${paragraphHtml("whyLove")}
+        <h2>Why Users Might Hate It</h2>
+        ${htmlBlock([
+          { key: "whyHate", label: "Reasons to hate, distrust, or abandon" },
+          { key: "adoptionBarriers", label: "Adoption barriers" },
+          { key: "edgeCases", label: "Edge cases and failure states" }
+        ])}
+        <h2>Scope Boundaries</h2>
+        ${htmlBlock([
+          { key: "nonGoals", label: "Non-goals" },
+          { key: "launchScope", label: "Launch scope" }
+        ])}
+        <h2>Success Metrics</h2>
+        ${paragraphHtml("successMetrics")}
+        <h2>Acceptance Criteria</h2>
+        ${paragraphHtml("acceptanceCriteria")}
+        <h2>Open Questions and Risks</h2>
+        ${paragraphHtml("openRisks")}
+      `;
+    }
+
+    function addBubble(role, text) {
       const bubble = document.createElement("div");
-      bubble.className = `bubble ${role}`.trim();
+      bubble.className = `bubble ${role}`;
       bubble.textContent = text;
       messages.appendChild(bubble);
       messages.scrollTop = messages.scrollHeight;
+      transcript.push({ role, text });
+      saveState();
     }
 
-    function setStep(activeIndex) {
-      steps.forEach((step, index) => {
-        step.classList.toggle("done", index < activeIndex);
-        step.classList.toggle("live", index === activeIndex);
-      });
-    }
-
-    function resetSite() {
-      wall.querySelectorAll(".brick").forEach((brick) => brick.remove());
-      stack.replaceChildren();
-      roof.classList.remove("show");
-      houseWindow.classList.remove("show");
-      door.classList.remove("show");
-      worker.className = "worker";
-
-      for (let i = 0; i < 12; i += 1) {
-        const stackBrick = document.createElement("div");
-        stackBrick.className = "stack-brick";
-        stackBrick.style.left = `${(i % 2) * 42 + (Math.floor(i / 2) % 2 ? 16 : 0)}px`;
-        stackBrick.style.bottom = `${Math.floor(i / 2) * 16}px`;
-        stackBrick.style.background = ["#ffd0bd", "#ffe2a8", "#ffc1d9"][i % 3];
-        stack.appendChild(stackBrick);
+    function renderTranscript() {
+      messages.replaceChildren();
+      if (!transcript.length) {
+        addBubble("system", "Press Start. I will ask requirements questions out loud, listen to your answers, and keep the formatted document updated on the right.");
+        transcript = transcript.slice(0, 1);
+        saveState();
+      } else {
+        const restored = [...transcript];
+        transcript = [];
+        restored.forEach((turn) => addBubble(turn.role, turn.text));
       }
     }
 
-    function createWallBrick(index) {
-      const row = Math.floor(index / 3);
-      const col = index % 3;
-      const brick = document.createElement("div");
-      brick.className = "brick";
-      brick.style.left = `${col * 50 + (row % 2 ? 25 : 0)}px`;
-      brick.style.bottom = `${row * 27}px`;
-      wall.appendChild(brick);
-      return brick;
+    function currentQuestion() {
+      return questions[currentIndex];
     }
 
-    async function layBrick(index) {
-      const stackBricks = [...stack.querySelectorAll(".stack-brick")];
-      const stackBrick = stackBricks[index];
-      worker.classList.add("walking");
-      await wait(220);
-      worker.classList.add("carrying");
-      if (stackBrick) stackBrick.classList.add("used");
-      await wait(220);
-      worker.classList.add("to-house");
-      await wait(620);
-      const brick = createWallBrick(index);
-      requestAnimationFrame(() => brick.classList.add("placed"));
-      worker.classList.remove("carrying");
-      await wait(240);
-      worker.classList.remove("to-house");
-      await wait(520);
+    function askCurrentQuestion() {
+      const question = currentQuestion();
+      if (!question) {
+        addBubble("assistant", "We have enough detail for a first requirements document. You can keep speaking to refine any section.");
+        speak("We have enough detail for a first requirements document. You can keep speaking to refine any section.");
+        return;
+      }
+
+      addBubble("assistant", question.prompt);
+      speak(question.prompt);
+      liveCaption.textContent = "Listening for your answer.";
     }
 
-    async function runBuild(request) {
-      button.disabled = true;
-      statusPill.textContent = "Building";
-      buildingFor.textContent = request;
-      meterFill.style.width = "0%";
-      resetSite();
+    function speak(text) {
+      if (!("speechSynthesis" in window)) {
+        if (live) startRecognition();
+        return;
+      }
+      speaking = true;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.96;
+      utterance.pitch = 1;
+      utterance.onend = () => {
+        speaking = false;
+        if (live) startRecognition();
+      };
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }
 
-      for (let i = 0; i < buildSteps.length; i += 1) {
-        const step = buildSteps[i];
-        setStep(i);
-        stageLabel.textContent = step.label;
-        etaLabel.textContent = `ETA ${step.eta}`;
-        meterFill.style.width = `${step.progress}%`;
-        addBubble(step.text);
+    function setupRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return null;
 
-        if (i === 2) {
-          for (let brickIndex = 0; brickIndex < 12; brickIndex += 1) {
-            await layBrick(brickIndex);
-            meterFill.style.width = `${38 + brickIndex * 3}%`;
-          }
-          worker.classList.remove("walking");
-        } else if (i === 3) {
-          houseWindow.classList.add("show");
-          await wait(260);
-          door.classList.add("show");
-          await wait(260);
-          roof.classList.add("show");
-          await wait(600);
-        } else {
-          await wait(850);
+      const speech = new SpeechRecognition();
+      speech.continuous = true;
+      speech.interimResults = true;
+      speech.lang = "en-US";
+
+      speech.onstart = () => {
+        talkButton.classList.add("listening");
+        talkButton.classList.remove("idle");
+        talkButton.textContent = "Live";
+        voiceTitle.textContent = "Live voice conversation is running";
+      };
+
+      speech.onresult = (event) => {
+        let interim = "";
+        let finalText = "";
+        for (let index = event.resultIndex; index < event.results.length; index += 1) {
+          const result = event.results[index];
+          if (result.isFinal) finalText += result[0].transcript;
+          else interim += result[0].transcript;
         }
-      }
 
-      steps.forEach((step) => {
-        step.classList.add("done");
-        step.classList.remove("live");
-      });
-      meterFill.style.width = "100%";
-      stageLabel.textContent = "Complete";
-      etaLabel.textContent = "ETA 0s";
-      statusPill.textContent = "Ready";
-      button.disabled = false;
-      input.value = "";
-      input.focus();
+        if (interim.trim()) liveCaption.textContent = interim.trim();
+        if (finalText.trim()) handleSpokenTurn(finalText.trim());
+      };
+
+      speech.onerror = () => {
+        liveCaption.textContent = "Voice capture had an issue. Press Start again to continue.";
+      };
+
+      speech.onend = () => {
+        talkButton.classList.remove("listening");
+        if (live && !speaking) startRecognition();
+      };
+
+      return speech;
     }
 
-    composer.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const request = input.value.trim();
-      if (!request || button.disabled) return;
-      addBubble(request, "user");
-      runBuild(request);
-    });
+    function startRecognition() {
+      if (!live || speaking) return;
+      if (!recognition) recognition = setupRecognition();
+      if (!recognition) {
+        liveCaption.textContent = "This browser does not support speech capture. Use a Chromium browser or connect Gemini Live audio streaming.";
+        return;
+      }
+      try {
+        recognition.start();
+      } catch {
+        // Recognition may already be running.
+      }
+    }
 
-    resetSite();
+    async function checkGeminiTokenEndpoint() {
+      try {
+        const response = await fetch(geminiLiveConfig.tokenEndpoint, { method: "POST" });
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (payload.access_token) {
+          voiceHint.innerHTML = `<strong>Gemini Live token ready:</strong> ${escapeHtml(payload.model || geminiLiveConfig.model)}. Browser speech fallback is active until full audio streaming is connected.`;
+        }
+      } catch {
+        // Static mode or no backend: browser speech fallback remains active.
+      }
+    }
+
+    function handleSpokenTurn(text) {
+      const question = currentQuestion();
+      addBubble("user", text);
+      liveCaption.textContent = "Captured. Updating the requirements document.";
+
+      if (question) {
+        answers[question.key] = text;
+        currentIndex += 1;
+      } else {
+        answers.openRisks = [answers.openRisks, text].filter(Boolean).join(" ");
+      }
+
+      updateAll();
+      saveState();
+
+      if (live) {
+        window.setTimeout(() => askCurrentQuestion(), 450);
+      }
+    }
+
+    function updateProgress() {
+      const answeredCount = questions.filter((question) => answerFor(question.key)).length;
+      const percent = Math.round((answeredCount / questions.length) * 100);
+      progressFill.style.width = `${percent}%`;
+      completionText.textContent = `${percent}% complete`;
+      questionCounter.textContent = currentIndex >= questions.length
+        ? `Question ${questions.length} of ${questions.length}`
+        : `Question ${currentIndex + 1} of ${questions.length}`;
+
+      sectionRail.replaceChildren();
+      const activeSection = questions[Math.min(currentIndex, questions.length - 1)]?.section;
+      sectionNames.forEach((section) => {
+        const chip = document.createElement("span");
+        chip.className = `section-chip ${section === activeSection ? "active" : ""}`.trim();
+        const sectionQuestions = questions.filter((question) => question.section === section);
+        const done = sectionQuestions.filter((question) => answerFor(question.key)).length;
+        chip.textContent = `${section} ${done}/${sectionQuestions.length}`;
+        sectionRail.appendChild(chip);
+      });
+    }
+
+    function updateAll() {
+      updateProgress();
+      renderDocument();
+      docStatus.textContent = "Formatted document updates from spoken answers.";
+    }
+
+    function toggleLive() {
+      live = !live;
+      if (live) {
+        talkButton.textContent = "Live";
+        talkButton.classList.add("listening");
+        talkButton.classList.remove("idle");
+        voiceTitle.textContent = "Live voice conversation is running";
+        checkGeminiTokenEndpoint();
+        askCurrentQuestion();
+      } else {
+        if (recognition) recognition.stop();
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        speaking = false;
+        talkButton.textContent = "Start";
+        talkButton.classList.remove("listening");
+        talkButton.classList.add("idle");
+        voiceTitle.textContent = "Voice conversation is paused";
+        liveCaption.textContent = "Press Start to continue the live voice conversation.";
+      }
+    }
+
+    function switchDocTab(mode) {
+      const markdownMode = mode === "markdown";
+      formattedTab.classList.toggle("active", !markdownMode);
+      markdownTab.classList.toggle("active", markdownMode);
+      requirementsPreview.classList.toggle("hidden", markdownMode);
+      markdownEditor.classList.toggle("hidden", !markdownMode);
+    }
+
+    async function copyText(text, label) {
+      try {
+        await navigator.clipboard.writeText(text);
+        docStatus.textContent = `${label} copied.`;
+      } catch {
+        docStatus.textContent = `Could not copy ${label.toLowerCase()}.`;
+      }
+    }
+
+    function transcriptText() {
+      return transcript.map((turn) => `${turn.role}: ${turn.text}`).join("\n\n");
+    }
+
+    function downloadMarkdown() {
+      const blob = new Blob([markdownEditor.value], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "requirements.md";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function restart() {
+      if (recognition) recognition.stop();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+      live = false;
+      speaking = false;
+      answers = {};
+      transcript = [];
+      currentIndex = 0;
+      localStorage.removeItem(stateKey);
+      talkButton.textContent = "Start";
+      talkButton.classList.remove("listening");
+      talkButton.classList.add("idle");
+      voiceTitle.textContent = "Voice conversation is paused";
+      liveCaption.textContent = "Press Start and answer out loud. Each completed spoken turn updates the formatted requirements document on the right.";
+      renderTranscript();
+      updateAll();
+    }
+
+    talkButton.addEventListener("click", toggleLive);
+    restartButton.addEventListener("click", restart);
+    copyTranscriptButton.addEventListener("click", () => copyText(transcriptText(), "Transcript"));
+    copyMarkdownButton.addEventListener("click", () => copyText(markdownEditor.value, "Markdown"));
+    downloadButton.addEventListener("click", downloadMarkdown);
+    formattedTab.addEventListener("click", () => switchDocTab("formatted"));
+    markdownTab.addEventListener("click", () => switchDocTab("markdown"));
+
+    loadState();
+    renderTranscript();
+    updateAll();
   </script>
 </body>
 </html>
